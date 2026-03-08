@@ -6,7 +6,6 @@
     <title>Älykäs Skanneri Docs-tiedostoon</title>
     
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
@@ -15,19 +14,16 @@
         .container { max-width: 600px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         h2 { margin-top: 0; color: #1a73e8; }
         
-        /* Kamerapainike */
         .btn-kamera { background: #4285F4; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 18px; width: 100%; cursor: pointer; display: block; box-sizing: border-box; margin-bottom: 15px; font-weight: bold;}
         #cameraInput { display: none; }
         
-        /* Rajausalueen tyylit */
         .cropper-wrapper { display: none; margin-top: 10px; border: 2px solid #ccc; border-radius: 8px; overflow: hidden; background: #000; }
         #imageToCrop { max-width: 100%; display: block; }
         
-        /* Skannauspainike (ilmestyy vasta kun kuva on otettu) */
         #cropAndScanBtn { display: none; background: #34a853; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 18px; width: 100%; cursor: pointer; margin-top: 15px; font-weight: bold; }
         
-        /* Status ja tulokset */
-        #status { margin-top: 20px; font-weight: bold; color: #555; background: #e8f0fe; padding: 10px; border-radius: 8px; display: none;}
+        /* Poistettu display: none, jotta viestit näkyvät heti */
+        #status { margin-top: 20px; font-weight: bold; color: #555; background: #e8f0fe; padding: 10px; border-radius: 8px; }
         #result { margin-top: 15px; text-align: left; background: #f9f9f9; padding: 10px; border-left: 4px solid #4285F4; min-height: 50px; white-space: pre-wrap; font-size: 14px; word-break: break-word; display: none;}
         
         #hiddenCanvas { display: none; }
@@ -48,14 +44,13 @@
 
         <button id="cropAndScanBtn">🔍 Skannaa valittu alue</button>
 
-        <div id="status"></div>
+        <div id="status">Odotetaan kuvaa...</div>
         <div id="result"></div>
         
         <canvas id="hiddenCanvas"></canvas>
     </div>
 
     <script>
-        // Sinun toimiva URL-osoitteesi
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBtsR0xIR4gCQ795V1GBrURnciRXlOzps487q6Szu2SFwPAD-54IOO7YIdYEwa_7SHMA/exec';
 
         let cropperInstance = null;
@@ -66,104 +61,95 @@
         const statusEl = document.getElementById('status');
         const resultEl = document.getElementById('result');
 
-        // --- VAIHE 1: Kuvan ottaminen ja Cropperin käynnistys ---
         cameraInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Piilotetaan vanhat tulokset
-            statusEl.style.display = 'none';
+            // Kerrotaan heti käyttäjälle, että kuvaa käsitellään
+            statusEl.innerText = 'Ladataan kuvaa rajaustyökaluun...';
+            statusEl.style.color = '#fbbc05';
             resultEl.style.display = 'none';
 
             const reader = new FileReader();
+            
+            // Kun tiedosto on luettu...
             reader.onload = function(event) {
-                // Asetetaan kuva näkyviin
-                imageToCrop.src = event.target.result;
-                cropperWrapper.style.display = 'block';
-                cropAndScanBtn.style.display = 'block';
+                // ...odotetaan, että HTML-kuva on oikeasti piirretty ruudulle
+                imageToCrop.onload = function() {
+                    try {
+                        cropperWrapper.style.display = 'block';
+                        cropAndScanBtn.style.display = 'block';
 
-                // Tuhotaan vanha cropper jos sellainen oli
-                if (cropperInstance) {
-                    cropperInstance.destroy();
-                }
+                        if (cropperInstance) {
+                            cropperInstance.destroy();
+                        }
 
-                // Käynnistetään Cropper.js
-                cropperInstance = new Cropper(imageToCrop, {
-                    viewMode: 1, // Pitää rajaimen kuvan sisällä
-                    autoCropArea: 0.8, // Rajaulaatikko täyttää aluksi 80% kuvasta
-                    movable: true,
-                    zoomable: true,
-                    rotatable: false,
-                    scalable: false,
-                    // Tärkeää: ei lukita kuvasuhdetta, jotta voi rajata kapeitakin palstoja
-                });
+                        cropperInstance = new Cropper(imageToCrop, {
+                            viewMode: 1,
+                            autoCropArea: 0.8,
+                            movable: true,
+                            zoomable: true,
+                            rotatable: false,
+                            scalable: false
+                        });
+                        
+                        statusEl.innerText = 'Säädä rajauslaatikko tekstin kohdalle ja paina vihreää nappia.';
+                        statusEl.style.color = '#555';
+                    } catch (virhe) {
+                        statusEl.innerText = '❌ Virhe rajaustyökalun latauksessa: ' + virhe.message;
+                        statusEl.style.color = 'red';
+                    }
+                };
                 
-                statusEl.innerText = 'Säädä rajauslaatikko tekstin kohdalle ja paina vihreää nappia.';
-                statusEl.style.display = 'block';
-                statusEl.style.color = '#555';
+                // Annetaan kuvalle data (tämä laukaisee yllä olevan onload-tapahtuman)
+                imageToCrop.src = event.target.result;
             };
+            
             reader.readAsDataURL(file);
         });
 
-        // --- VAIHE 2: Rajaaminen, kuvanparannus ja skannaus ---
         cropAndScanBtn.addEventListener('click', async function() {
             if (!cropperInstance) return;
 
             statusEl.innerText = 'Leikataan ja parannetaan kuvaa...';
             statusEl.style.color = '#fbbc05';
-            statusEl.style.display = 'block';
             resultEl.style.display = 'none';
             
-            // Piilotetaan rajaustyökalu
             cropperWrapper.style.display = 'none';
             cropAndScanBtn.style.display = 'none';
 
-            // 1. Haetaan rajattu alue canvas-muodossa
-            // maxWidth: 1000px riittää tekstille hyvin, nopeuttaa skannausta
             const croppedCanvas = cropperInstance.getCroppedCanvas({ maxWidth: 1000 });
             
-            // 2. Parannetaan laatua (mustavalkoisuus + kontrasti) hiddenCanvasilla
             const finalCanvas = document.getElementById('hiddenCanvas');
             const ctx = finalCanvas.getContext('2d');
             
             finalCanvas.width = croppedCanvas.width;
             finalCanvas.height = croppedCanvas.height;
             
-            // Piirretään rajattu kuva lopulliselle canvasille
             ctx.drawImage(croppedCanvas, 0, 0);
             
-            // Haetaan pikselitiedot muokkausta varten
             const imgData = ctx.getImageData(0, 0, finalCanvas.width, finalCanvas.height);
             const data = imgData.data;
             
-            // Käännetään kuvasta mustavalkoinen ja nostetaan kontrastia rajusti
             for (let i = 0; i < data.length; i += 4) {
-                // Lasketaan kirkkaus (YUV-kaava)
                 let gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                
-                // Nostetaan kontrastia: jos kirkkaus yli puolen välin -> valkoinen, muuten musta
-                // Tämä poistaa harmaat varjot ja jättää vain mustan tekstin
                 let binary = gray > 140 ? 255 : 0; 
-                
-                data[i] = binary;     // R
-                data[i+1] = binary;   // G
-                data[i+2] = binary;   // B
+                data[i] = binary;
+                data[i+1] = binary;
+                data[i+2] = binary;
             }
             ctx.putImageData(imgData, 0, 0);
 
-            // Muutetaan lopullinen kuva Tesseractin ymmärtämään muotoon
             const processedImageData = finalCanvas.toDataURL('image/jpeg', 0.9);
             
             statusEl.innerText = 'Tekoäly lukee tekstiä rajatulta alueelta (n. 5-10s)...';
 
             try {
-                // 3. Tekstintunnistus
                 const { data: { text } } = await Tesseract.recognize(processedImageData, 'fin+eng');
 
                 if (!text.trim()) {
                     statusEl.innerText = 'Rajatulta alueelta ei löytynyt luettavaa tekstiä. Yritä uudelleen.';
                     statusEl.style.color = 'red';
-                    // Tuodaan rajaus takaisin näkyviin, jos epäonnistui
                     cropperWrapper.style.display = 'block';
                     cropAndScanBtn.style.display = 'block';
                     return;
@@ -173,7 +159,6 @@
                 resultEl.style.display = 'block';
                 statusEl.innerText = 'Teksti luettu! Tallennetaan Google Docsiin...';
 
-                // 4. Lähetys Googlelle
                 const formData = new URLSearchParams();
                 formData.append('text', text);
 
@@ -193,11 +178,9 @@
                     } else {
                         statusEl.innerText = '✅ Rajattu teksti tallennettu Docsiin!';
                         statusEl.style.color = 'green';
-                        // Tyhjennetään kamera-input, jotta uuden kuvan ottaminen onnistuu
                         cameraInput.value = '';
                     }
                 } catch (fetchError) {
-                    // Joskus selain ei saa vastausta, vaikka tallennus onnistui
                     statusEl.innerText = 'Tiedot lähetetty! Tarkista Google Docs.';
                     statusEl.style.color = 'blue';
                     resultEl.innerText += "\n\n(Huom: Selain ei saanut vahvistusta Googlelta, mutta teksti saattoi silti tallentua. Tarkista Docs-tiedostosi.)";
