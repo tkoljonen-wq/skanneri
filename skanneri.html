@@ -8,10 +8,12 @@
     <style>
         body { font-family: sans-serif; padding: 20px; text-align: center; background: #f4f4f9; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .btn-kamera { background: #4285F4; color: white; padding: 15px 20px; border: none; border-radius: 5px; font-size: 18px; width: 100%; cursor: pointer; }
-        #cameraInput { display: none; } /* Piilotetaan oletusnappi, käytetään hienompaa */
+        .btn-kamera { background: #4285F4; color: white; padding: 15px 20px; border: none; border-radius: 5px; font-size: 18px; width: 100%; cursor: pointer; display: block; box-sizing: border-box;}
+        #cameraInput { display: none; }
         #status { margin-top: 20px; font-weight: bold; color: #555; }
         #result { margin-top: 20px; text-align: left; background: #f9f9f9; padding: 10px; border-left: 4px solid #4285F4; min-height: 50px; white-space: pre-wrap; font-size: 14px;}
+        /* Piilotettu canvas kuvan muokkausta varten */
+        #hiddenCanvas { display: none; }
     </style>
 </head>
 <body>
@@ -23,55 +25,76 @@
         <label for="cameraInput" class="btn-kamera">📸 Ota kuva tekstistä</label>
         <input type="file" accept="image/*" capture="environment" id="cameraInput">
 
-        <div id="status">Odotetaan kuvaa...</div>
+        <div id="status">Odotetaan kuvaa... (Pidä kamera vakaana ja valaise teksti hyvin)</div>
         <div id="result">Skannattu teksti ilmestyy tähän.</div>
+        <canvas id="hiddenCanvas"></canvas>
     </div>
 
     <script>
-        // LIITÄ TÄHÄN VAIHEESSA 1 SAAMASI GOOGLE APPS SCRIPT URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbynrmkuZuEuXzXIU6Q3APf9zYweDFsT0XujxxE-gl-2GPMS6O1q5bHHrCMjqkBKZA2GBg/exec';
+        // TÄSSÄ ON SINUN OMA URL-OSOITTEESI NYT PAIKOILLAAN!
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw_4EGYtWi74rMNhCKZ8p5c-1e43e_FKXVGbDspGJlH3x9smk66HtwycvoOLXO-k14J_w/exec';
 
-        document.getElementById('cameraInput').addEventListener('change', async function(e) {
+        document.getElementById('cameraInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const statusEl = document.getElementById('status');
             const resultEl = document.getElementById('result');
 
-            statusEl.innerText = 'Tunnistetaan tekstiä kuvasta... (tässä menee hetki)';
+            statusEl.innerText = 'Käsitellään kuvaa...';
             statusEl.style.color = '#fbbc05';
 
-            try {
-                // 1. Muutetaan kuva tekstiksi (suomi ja englanti ladattuna paremman tarkkuuden vuoksi)
-                const { data: { text } } = await Tesseract.recognize(file, 'fin+eng');
+            // Pienennetään kuva ensin canvas-elementin avulla, jotta Tesseract ei sekoa isosta resoluutiosta
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = async function() {
+                    const canvas = document.getElementById('hiddenCanvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Pienennetään kuva (max leveys 1200px on hyvä tekstille)
+                    const maxWidth = 1200;
+                    const scale = Math.min(maxWidth / img.width, 1);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    
+                    // Piirretään pienennetty kuva
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const processedImageData = canvas.toDataURL('image/jpeg', 0.8);
 
-                if (!text.trim()) {
-                    statusEl.innerText = 'Kuvasta ei löytynyt tekstiä.';
-                    statusEl.style.color = 'red';
-                    return;
-                }
+                    statusEl.innerText = 'Luetaan tekstiä... tässä voi mennä hetki.';
 
-                resultEl.innerText = text;
-                statusEl.innerText = 'Teksti luettu! Tallennetaan Driveen...';
+                    try {
+                        const { data: { text } } = await Tesseract.recognize(processedImageData, 'fin+eng');
 
-                // 2. Lähetetään teksti Google Apps Scriptiin
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Pakollinen, jotta selaimesi turva-asetukset eivät estä lähetystä
-                    body: text
-                });
+                        if (!text.trim()) {
+                            statusEl.innerText = 'Kuvasta ei löytynyt luettavaa tekstiä. Yritä uudelleen paremmassa valossa.';
+                            statusEl.style.color = 'red';
+                            return;
+                        }
 
-                statusEl.innerText = '✅ Teksti tallennettu onnistuneesti Docs-tiedostoon!';
-                statusEl.style.color = 'green';
-                
-                // Tyhjennetään input, jotta uuden kuvan ottaminen onnistuu heti
-                document.getElementById('cameraInput').value = '';
+                        resultEl.innerText = text;
+                        statusEl.innerText = 'Teksti luettu! Lähetetään Driveen...';
 
-            } catch (error) {
-                console.error(error);
-                statusEl.innerText = '❌ Tapahtui virhe: ' + error.message;
-                statusEl.style.color = 'red';
-            }
+                        // Lähetys
+                        await fetch(WEB_APP_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: text
+                        });
+
+                        statusEl.innerText = '✅ Tekstin pitäisi nyt olla Docsissa!';
+                        statusEl.style.color = 'green';
+                        document.getElementById('cameraInput').value = '';
+
+                    } catch (error) {
+                        statusEl.innerText = '❌ Virhe tekstin tunnistuksessa: ' + error.message;
+                        statusEl.style.color = 'red';
+                    }
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
         });
     </script>
 </body>
