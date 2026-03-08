@@ -2,197 +2,837 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Älykäs Skanneri Docs-tiedostoon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Skanneri → Google Docs</title>
     
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: sans-serif; padding: 10px; text-align: center; background: #f0f2f5; margin: 0; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        h2 { margin-top: 0; color: #1a73e8; }
-        
-        .btn-kamera { background: #4285F4; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 18px; width: 100%; cursor: pointer; display: block; box-sizing: border-box; margin-bottom: 15px; font-weight: bold;}
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface-2: #242734;
+            --border: #2e3241;
+            --text: #e8eaed;
+            --text-dim: #8b8fa3;
+            --accent: #6c9fff;
+            --accent-glow: rgba(108, 159, 255, 0.15);
+            --success: #4ade80;
+            --success-glow: rgba(74, 222, 128, 0.15);
+            --warn: #fbbf24;
+            --danger: #f87171;
+            --radius: 14px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 24px 0 20px;
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #6c9fff, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Steps indicator */
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+        .step-dot {
+            width: 32px;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background 0.4s, box-shadow 0.4s;
+        }
+        .step-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        .step-dot.done {
+            background: var(--success);
+        }
+
+        /* Camera button */
+        .camera-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #4a6cf7, #6c5ce7);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-family: inherit;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 20px rgba(74, 108, 247, 0.35);
+        }
+        .camera-btn:active {
+            transform: scale(0.97);
+        }
+        .camera-btn svg { width: 22px; height: 22px; }
         #cameraInput { display: none; }
-        
-        .cropper-wrapper { display: none; margin-top: 10px; border: 2px solid #ccc; border-radius: 8px; overflow: hidden; background: #000; }
+
+        /* Image preview / Cropper */
+        .crop-area {
+            display: none;
+            margin-top: 16px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #000;
+            position: relative;
+        }
+        .crop-area.visible { display: block; }
         #imageToCrop { max-width: 100%; display: block; }
-        
-        #cropAndScanBtn { display: none; background: #34a853; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 18px; width: 100%; cursor: pointer; margin-top: 15px; font-weight: bold; }
-        
-        /* Poistettu display: none, jotta viestit näkyvät heti */
-        #status { margin-top: 20px; font-weight: bold; color: #555; background: #e8f0fe; padding: 10px; border-radius: 8px; }
-        #result { margin-top: 15px; text-align: left; background: #f9f9f9; padding: 10px; border-left: 4px solid #4285F4; min-height: 50px; white-space: pre-wrap; font-size: 14px; word-break: break-word; display: none;}
-        
+
+        /* Preprocessing toggle */
+        .preprocess-bar {
+            display: none;
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .preprocess-bar.visible { display: flex; align-items: center; justify-content: space-between; }
+        .preprocess-bar label {
+            font-size: 13px;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toggle {
+            appearance: none;
+            width: 40px;
+            height: 22px;
+            background: var(--border);
+            border-radius: 11px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .toggle:checked { background: var(--accent); }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .toggle:checked::after { transform: translateX(18px); }
+
+        /* Language selector */
+        .lang-bar {
+            display: none;
+            margin-top: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .lang-bar.visible { display: flex; }
+        .lang-chip {
+            padding: 6px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lang-chip.selected {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Scan button */
+        .scan-btn {
+            display: none;
+            width: 100%;
+            padding: 16px;
+            margin-top: 14px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-family: inherit;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+            transition: transform 0.15s;
+        }
+        .scan-btn.visible { display: block; }
+        .scan-btn:active { transform: scale(0.97); }
+        .scan-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Status */
+        .status-card {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .status-card.scanning {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            color: var(--accent);
+        }
+        .status-card.success {
+            border-color: var(--success);
+            background: var(--success-glow);
+            color: var(--success);
+        }
+        .status-card.error {
+            border-color: var(--danger);
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--danger);
+        }
+
+        /* Progress bar */
+        .progress-wrap {
+            display: none;
+            margin-top: 12px;
+            background: var(--surface-2);
+            border-radius: 6px;
+            height: 6px;
+            overflow: hidden;
+        }
+        .progress-wrap.visible { display: block; }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #a78bfa);
+            border-radius: 6px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Result area */
+        .result-card {
+            display: none;
+            margin-top: 16px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .result-card.visible { display: block; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .result-header span {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .copy-btn {
+            padding: 5px 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .copy-btn:active { background: var(--accent-glow); }
+        .result-text {
+            padding: 14px 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+            color: var(--text);
+        }
+        .result-text[contenteditable="true"]:focus {
+            outline: none;
+            background: var(--surface-2);
+        }
+
+        /* Action buttons after result */
+        .action-bar {
+            display: none;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .action-bar.visible { display: flex; }
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .action-btn.primary {
+            background: linear-gradient(135deg, #4a6cf7, #6c5ce7);
+            border-color: transparent;
+            box-shadow: 0 2px 12px rgba(74, 108, 247, 0.25);
+        }
+        .action-btn:active { transform: scale(0.97); }
+
+        /* Retry button */
+        .retry-area {
+            display: none;
+            margin-top: 12px;
+        }
+        .retry-area.visible { display: block; }
+
+        /* Spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        /* Canvas hidden */
         #hiddenCanvas { display: none; }
+
+        /* Custom cropper styling */
+        .cropper-view-box,
+        .cropper-face { border-radius: 0; }
+        .cropper-line { background: var(--accent); }
+        .cropper-point { background: var(--accent); width: 12px !important; height: 12px !important; border-radius: 50%; }
+        .cropper-modal { background: rgba(0,0,0,0.6); }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Älykäs Skanneri</h2>
-        <p>1. Ota kuva. 2. Rajaa teksti. 3. Skannaa.</p>
-
-        <label for="cameraInput" class="btn-kamera">📸 Ota kuva tekstistä</label>
-        <input type="file" accept="image/*" capture="environment" id="cameraInput">
-
-        <div class="cropper-wrapper" id="cropperWrapper">
-            <img id="imageToCrop" src="" alt="Säädä rajausta">
-        </div>
-
-        <button id="cropAndScanBtn">🔍 Skannaa valittu alue</button>
-
-        <div id="status">Odotetaan kuvaa...</div>
-        <div id="result"></div>
-        
-        <canvas id="hiddenCanvas"></canvas>
+<div class="app">
+    <div class="header">
+        <h1>📄 Skanneri</h1>
+        <p>Kuvasta tekstiksi → Google Docs</p>
     </div>
 
-    <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBtsR0xIR4gCQ795V1GBrURnciRXlOzps487q6Szu2SFwPAD-54IOO7YIdYEwa_7SHMA/exec';
+    <div class="steps">
+        <div class="step-dot active" id="step1"></div>
+        <div class="step-dot" id="step2"></div>
+        <div class="step-dot" id="step3"></div>
+    </div>
 
-        let cropperInstance = null;
-        const cameraInput = document.getElementById('cameraInput');
-        const imageToCrop = document.getElementById('imageToCrop');
-        const cropperWrapper = document.getElementById('cropperWrapper');
-        const cropAndScanBtn = document.getElementById('cropAndScanBtn');
-        const statusEl = document.getElementById('status');
-        const resultEl = document.getElementById('result');
+    <!-- Step 1: Camera -->
+    <label for="cameraInput" class="camera-btn" id="cameraLabel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Ota kuva tai valitse tiedosto
+    </label>
+    <input type="file" accept="image/*" capture="environment" id="cameraInput">
 
-        cameraInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+    <!-- Step 2: Crop -->
+    <div class="crop-area" id="cropArea">
+        <img id="imageToCrop" src="" alt="Rajaa kuva">
+    </div>
 
-            // Kerrotaan heti käyttäjälle, että kuvaa käsitellään
-            statusEl.innerText = 'Ladataan kuvaa rajaustyökaluun...';
-            statusEl.style.color = '#fbbc05';
-            resultEl.style.display = 'none';
+    <div class="preprocess-bar" id="preprocessBar">
+        <label>
+            🔧 Kuvanparannus
+            <input type="checkbox" class="toggle" id="enhanceToggle" checked>
+        </label>
+        <label>
+            📐 Terävöitys
+            <input type="checkbox" class="toggle" id="sharpenToggle">
+        </label>
+    </div>
 
-            const reader = new FileReader();
-            
-            // Kun tiedosto on luettu...
-            reader.onload = function(event) {
-                // ...odotetaan, että HTML-kuva on oikeasti piirretty ruudulle
-                imageToCrop.onload = function() {
-                    try {
-                        cropperWrapper.style.display = 'block';
-                        cropAndScanBtn.style.display = 'block';
+    <div class="lang-bar" id="langBar">
+        <button class="lang-chip selected" data-lang="fin+eng">🇫🇮 Suomi + EN</button>
+        <button class="lang-chip" data-lang="fin">🇫🇮 Vain suomi</button>
+        <button class="lang-chip" data-lang="eng">🇬🇧 Vain englanti</button>
+        <button class="lang-chip" data-lang="swe+fin">🇸🇪 Ruotsi + FI</button>
+    </div>
 
-                        if (cropperInstance) {
-                            cropperInstance.destroy();
-                        }
+    <button class="scan-btn" id="scanBtn">🔍 Skannaa rajattu alue</button>
 
-                        cropperInstance = new Cropper(imageToCrop, {
-                            viewMode: 1,
-                            autoCropArea: 0.8,
-                            movable: true,
-                            zoomable: true,
-                            rotatable: false,
-                            scalable: false
-                        });
-                        
-                        statusEl.innerText = 'Säädä rajauslaatikko tekstin kohdalle ja paina vihreää nappia.';
-                        statusEl.style.color = '#555';
-                    } catch (virhe) {
-                        statusEl.innerText = '❌ Virhe rajaustyökalun latauksessa: ' + virhe.message;
-                        statusEl.style.color = 'red';
-                    }
-                };
-                
-                // Annetaan kuvalle data (tämä laukaisee yllä olevan onload-tapahtuman)
-                imageToCrop.src = event.target.result;
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-card" id="statusCard">
+        Ota kuva tai valitse kuvatiedosto yllä olevasta napista
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="resultCard">
+        <div class="result-header">
+            <span>Tunnistettu teksti</span>
+            <button class="copy-btn" id="copyBtn">📋 Kopioi</button>
+        </div>
+        <div class="result-text" id="resultText" contenteditable="true"></div>
+    </div>
+
+    <!-- Actions after result -->
+    <div class="action-bar" id="actionBar">
+        <button class="action-btn" id="retakeBtn">📸 Uusi kuva</button>
+        <button class="action-btn primary" id="saveDocsBtn">📝 Tallenna Docsiin</button>
+    </div>
+
+    <!-- Retry crop (if scan was bad) -->
+    <div class="retry-area" id="retryArea">
+        <button class="action-btn" style="width:100%" id="retryCropBtn">↩️ Rajaa uudelleen</button>
+    </div>
+
+    <canvas id="hiddenCanvas"></canvas>
+</div>
+
+<script>
+    // =====================================================
+    // ASETUKSET – Vaihda oma Google Apps Script URL tähän
+    // =====================================================
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBtsR0xIR4gCQ795V1GBrURnciRXlOzps487q6Szu2SFwPAD-54IOO7YIdYEwa_7SHMA/exec';
+
+    // =====================================================
+    // DOM-viitteet
+    // =====================================================
+    const $ = id => document.getElementById(id);
+    const cameraInput = $('cameraInput');
+    const imageToCrop = $('imageToCrop');
+    const cropArea = $('cropArea');
+    const preprocessBar = $('preprocessBar');
+    const langBar = $('langBar');
+    const scanBtn = $('scanBtn');
+    const statusCard = $('statusCard');
+    const progressWrap = $('progressWrap');
+    const progressBar = $('progressBar');
+    const resultCard = $('resultCard');
+    const resultText = $('resultText');
+    const actionBar = $('actionBar');
+    const retryArea = $('retryArea');
+
+    let cropperInstance = null;
+    let selectedLang = 'fin+eng';
+    let lastImageSrc = null;
+
+    // =====================================================
+    // Apufunktiot
+    // =====================================================
+    function setStatus(text, type = '') {
+        statusCard.className = 'status-card ' + type;
+        if (type === 'scanning') {
+            statusCard.innerHTML = `<div class="spinner"></div> ${text}`;
+        } else {
+            const icons = { success: '✅', error: '❌', '': 'ℹ️' };
+            statusCard.innerHTML = `${icons[type] || ''} ${text}`;
+        }
+    }
+
+    function setStep(n) {
+        [1,2,3].forEach(i => {
+            const dot = $('step' + i);
+            dot.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+        });
+    }
+
+    function showProgress(pct) {
+        progressWrap.classList.add('visible');
+        progressBar.style.width = pct + '%';
+    }
+    function hideProgress() {
+        progressWrap.classList.remove('visible');
+        progressBar.style.width = '0%';
+    }
+
+    function resetUI() {
+        cropArea.classList.remove('visible');
+        preprocessBar.classList.remove('visible');
+        langBar.classList.remove('visible');
+        scanBtn.classList.remove('visible');
+        resultCard.classList.remove('visible');
+        actionBar.classList.remove('visible');
+        retryArea.classList.remove('visible');
+        hideProgress();
+        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+    }
+
+    // =====================================================
+    // Kielenvalinta
+    // =====================================================
+    document.querySelectorAll('.lang-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.lang-chip').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedLang = btn.dataset.lang;
+        });
+    });
+
+    // =====================================================
+    // Vaihe 1: Kuvan valinta
+    // =====================================================
+    cameraInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        resetUI();
+        setStep(2);
+        setStatus('Ladataan kuvaa…', 'scanning');
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            lastImageSrc = event.target.result;
+
+            imageToCrop.onload = function() {
+                cropArea.classList.add('visible');
+                preprocessBar.classList.add('visible');
+                langBar.classList.add('visible');
+                scanBtn.classList.add('visible');
+
+                if (cropperInstance) cropperInstance.destroy();
+
+                cropperInstance = new Cropper(imageToCrop, {
+                    viewMode: 1,
+                    autoCropArea: 0.85,
+                    movable: true,
+                    zoomable: true,
+                    rotatable: true,
+                    scalable: false,
+                    responsive: true,
+                    restore: true,
+                    guides: true,
+                    highlight: true,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+
+                setStatus('Rajaa kuva tekstin kohdalle ja paina Skannaa', '');
             };
-            
-            reader.readAsDataURL(file);
-        });
+            imageToCrop.src = lastImageSrc;
+        };
+        reader.readAsDataURL(file);
+    });
 
-        cropAndScanBtn.addEventListener('click', async function() {
-            if (!cropperInstance) return;
+    // =====================================================
+    // Kuvanparannus — adaptiivinen, ei binäärinen
+    // =====================================================
+    function enhanceImage(canvas) {
+        const ctx = canvas.getContext('2d');
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imgData.data;
 
-            statusEl.innerText = 'Leikataan ja parannetaan kuvaa...';
-            statusEl.style.color = '#fbbc05';
-            resultEl.style.display = 'none';
-            
-            cropperWrapper.style.display = 'none';
-            cropAndScanBtn.style.display = 'none';
+        const enhance = $('enhanceToggle').checked;
+        const sharpen = $('sharpenToggle').checked;
 
-            const croppedCanvas = cropperInstance.getCroppedCanvas({ maxWidth: 1000 });
-            
-            const finalCanvas = document.getElementById('hiddenCanvas');
-            const ctx = finalCanvas.getContext('2d');
-            
-            finalCanvas.width = croppedCanvas.width;
-            finalCanvas.height = croppedCanvas.height;
-            
-            ctx.drawImage(croppedCanvas, 0, 0);
-            
-            const imgData = ctx.getImageData(0, 0, finalCanvas.width, finalCanvas.height);
-            const data = imgData.data;
-            
-            for (let i = 0; i < data.length; i += 4) {
-                let gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                let binary = gray > 140 ? 255 : 0; 
-                data[i] = binary;
-                data[i+1] = binary;
-                data[i+2] = binary;
+        if (enhance) {
+            // Harmaasävy + kontrasti (CLAHE-tyylinen yksinkertaistettu)
+            // Lasketaan ensin histogrammi
+            let min = 255, max = 0;
+            for (let i = 0; i < d.length; i += 4) {
+                let gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+                if (gray < min) min = gray;
+                if (gray > max) max = gray;
             }
-            ctx.putImageData(imgData, 0, 0);
+            const range = max - min || 1;
 
-            const processedImageData = finalCanvas.toDataURL('image/jpeg', 0.9);
-            
-            statusEl.innerText = 'Tekoäly lukee tekstiä rajatulta alueelta (n. 5-10s)...';
+            for (let i = 0; i < d.length; i += 4) {
+                let gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+                // Venytä kontrasti koko alueelle
+                let stretched = ((gray - min) / range) * 255;
+                // Lievä S-käyrä kontrastinparannus
+                stretched = 255 / (1 + Math.exp(-0.03 * (stretched - 128)));
+                d[i] = d[i+1] = d[i+2] = Math.round(stretched);
+            }
+        }
 
-            try {
-                const { data: { text } } = await Tesseract.recognize(processedImageData, 'fin+eng');
+        if (sharpen) {
+            // Yksinkertainen unsharp mask
+            const w = canvas.width;
+            const h = canvas.height;
+            const copy = new Uint8ClampedArray(d);
+            const amount = 0.6;
 
-                if (!text.trim()) {
-                    statusEl.innerText = 'Rajatulta alueelta ei löytynyt luettavaa tekstiä. Yritä uudelleen.';
-                    statusEl.style.color = 'red';
-                    cropperWrapper.style.display = 'block';
-                    cropAndScanBtn.style.display = 'block';
-                    return;
-                }
-
-                resultEl.innerText = "Tunnistettu teksti:\n" + text;
-                resultEl.style.display = 'block';
-                statusEl.innerText = 'Teksti luettu! Tallennetaan Google Docsiin...';
-
-                const formData = new URLSearchParams();
-                formData.append('text', text);
-
-                try {
-                    const response = await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: formData
-                    });
-
-                    const serverResponse = await response.text();
-
-                    if (serverResponse.includes("VIRHE:")) {
-                        statusEl.innerText = '❌ Tallennus epäonnistui!';
-                        resultEl.innerText += "\n\nGooglen vastaus: " + serverResponse;
-                        statusEl.style.color = 'red';
-                    } else {
-                        statusEl.innerText = '✅ Rajattu teksti tallennettu Docsiin!';
-                        statusEl.style.color = 'green';
-                        cameraInput.value = '';
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    const idx = (y * w + x) * 4;
+                    for (let c = 0; c < 3; c++) {
+                        const neighbors =
+                            copy[((y-1)*w+x)*4+c] +
+                            copy[((y+1)*w+x)*4+c] +
+                            copy[(y*w+x-1)*4+c] +
+                            copy[(y*w+x+1)*4+c];
+                        const blur = neighbors / 4;
+                        d[idx+c] = Math.min(255, Math.max(0,
+                            copy[idx+c] + amount * (copy[idx+c] - blur)
+                        ));
                     }
-                } catch (fetchError) {
-                    statusEl.innerText = 'Tiedot lähetetty! Tarkista Google Docs.';
-                    statusEl.style.color = 'blue';
-                    resultEl.innerText += "\n\n(Huom: Selain ei saanut vahvistusta Googlelta, mutta teksti saattoi silti tallentua. Tarkista Docs-tiedostosi.)";
                 }
-
-            } catch (error) {
-                statusEl.innerText = '❌ Virhe tekstin tunnistuksessa:';
-                resultEl.innerText = error.message;
-                statusEl.style.color = 'red';
-                resultEl.style.display = 'block';
             }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+    }
+
+    // =====================================================
+    // Vaihe 2: Skannaus
+    // =====================================================
+    scanBtn.addEventListener('click', async function() {
+        if (!cropperInstance) return;
+        scanBtn.disabled = true;
+        setStep(3);
+        setStatus('Leikataan ja käsitellään kuvaa…', 'scanning');
+        showProgress(10);
+
+        // Rajataan — EI rajoiteta maxWidth:iä liian pieneksi
+        const croppedCanvas = cropperInstance.getCroppedCanvas({
+            maxWidth: 2400,
+            maxHeight: 2400,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
         });
-    </script>
+
+        const finalCanvas = $('hiddenCanvas');
+        const ctx = finalCanvas.getContext('2d');
+
+        // Skaalaa ylöspäin jos liian pieni (Tesseract tykkää isommasta)
+        const minDim = 1200;
+        let targetW = croppedCanvas.width;
+        let targetH = croppedCanvas.height;
+
+        if (Math.max(targetW, targetH) < minDim) {
+            const scale = minDim / Math.max(targetW, targetH);
+            targetW = Math.round(targetW * scale);
+            targetH = Math.round(targetH * scale);
+        }
+
+        finalCanvas.width = targetW;
+        finalCanvas.height = targetH;
+        ctx.drawImage(croppedCanvas, 0, 0, targetW, targetH);
+
+        // Kuvanparannus
+        enhanceImage(finalCanvas);
+        showProgress(25);
+
+        const processedImage = finalCanvas.toDataURL('image/png');
+        setStatus('Luetaan tekstiä – tämä kestää hetken…', 'scanning');
+
+        try {
+            const result = await Tesseract.recognize(processedImage, selectedLang, {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        showProgress(25 + Math.round(m.progress * 65));
+                    }
+                }
+            });
+
+            const text = result.data.text.trim();
+            showProgress(100);
+
+            if (!text) {
+                setStatus('Tekstiä ei löytynyt. Kokeile rajata tarkemmin tai vaihda kieltä.', 'error');
+                scanBtn.disabled = false;
+                retryArea.classList.add('visible');
+                hideProgress();
+                return;
+            }
+
+            // Näytetään tulos muokattavana
+            resultText.innerText = text;
+            resultCard.classList.add('visible');
+            actionBar.classList.add('visible');
+            retryArea.classList.add('visible');
+
+            // Piilotetaan cropper
+            cropArea.classList.remove('visible');
+            preprocessBar.classList.remove('visible');
+            langBar.classList.remove('visible');
+            scanBtn.classList.remove('visible');
+
+            setStatus(`Teksti tunnistettu (${text.length} merkkiä). Voit muokata ennen tallennusta.`, 'success');
+            hideProgress();
+
+        } catch (err) {
+            setStatus('Virhe: ' + err.message, 'error');
+            hideProgress();
+            retryArea.classList.add('visible');
+        }
+        scanBtn.disabled = false;
+    });
+
+    // =====================================================
+    // Vaihe 3: Tallennus Google Docsiin
+    // =====================================================
+    $('saveDocsBtn').addEventListener('click', async function() {
+        const text = resultText.innerText.trim();
+        if (!text) {
+            setStatus('Ei tekstiä tallennettavaksi.', 'error');
+            return;
+        }
+
+        setStatus('Tallennetaan Google Docsiin…', 'scanning');
+        this.disabled = true;
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('text', text);
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData,
+                signal: controller.signal
+            }).catch(() => null);
+
+            clearTimeout(timeout);
+
+            if (response) {
+                const serverText = await response.text();
+                if (serverText.includes('VIRHE:')) {
+                    setStatus('Tallennus epäonnistui: ' + serverText, 'error');
+                } else {
+                    setStatus('Teksti tallennettu Google Docsiin!', 'success');
+                }
+            } else {
+                // CORS / opaque → oletetaan onnistunut
+                setStatus('Tiedot lähetetty! Tarkista Google Docs.', 'success');
+            }
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                setStatus('Aikakatkaisu – tarkista Google Docs manuaalisesti.', 'error');
+            } else {
+                setStatus('Lähetetty – tarkista Docs-tiedostosi.', 'success');
+            }
+        }
+        this.disabled = false;
+    });
+
+    // =====================================================
+    // Kopioi leikepöydälle
+    // =====================================================
+    $('copyBtn').addEventListener('click', async () => {
+        const text = resultText.innerText;
+        try {
+            await navigator.clipboard.writeText(text);
+            $('copyBtn').textContent = '✅ Kopioitu!';
+            setTimeout(() => $('copyBtn').textContent = '📋 Kopioi', 2000);
+        } catch {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            $('copyBtn').textContent = '✅ Kopioitu!';
+            setTimeout(() => $('copyBtn').textContent = '📋 Kopioi', 2000);
+        }
+    });
+
+    // =====================================================
+    // Uudelleenrajaus
+    // =====================================================
+    $('retryCropBtn').addEventListener('click', () => {
+        if (!lastImageSrc) return;
+        resultCard.classList.remove('visible');
+        actionBar.classList.remove('visible');
+        retryArea.classList.remove('visible');
+
+        cropArea.classList.add('visible');
+        preprocessBar.classList.add('visible');
+        langBar.classList.add('visible');
+        scanBtn.classList.add('visible');
+        setStep(2);
+
+        if (cropperInstance) cropperInstance.destroy();
+        imageToCrop.onload = function() {
+            cropperInstance = new Cropper(imageToCrop, {
+                viewMode: 1,
+                autoCropArea: 0.85,
+                movable: true,
+                zoomable: true,
+                rotatable: true,
+            });
+        };
+        imageToCrop.src = lastImageSrc;
+        setStatus('Rajaa uudelleen ja paina Skannaa', '');
+    });
+
+    // =====================================================
+    // Uusi kuva
+    // =====================================================
+    $('retakeBtn').addEventListener('click', () => {
+        resetUI();
+        setStep(1);
+        cameraInput.value = '';
+        setStatus('Ota uusi kuva tai valitse tiedosto', '');
+    });
+</script>
 </body>
 </html>
