@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuva Tekstiksi Docs-tiedostoon</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; background: #f4f4f9; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-kamera { background: #4285F4; color: white; padding: 15px 20px; border: none; border-radius: 5px; font-size: 18px; width: 100%; cursor: pointer; }
+        #cameraInput { display: none; } /* Piilotetaan oletusnappi, käytetään hienompaa */
+        #status { margin-top: 20px; font-weight: bold; color: #555; }
+        #result { margin-top: 20px; text-align: left; background: #f9f9f9; padding: 10px; border-left: 4px solid #4285F4; min-height: 50px; white-space: pre-wrap; font-size: 14px;}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Skannaa tekstiä</h2>
+        <p>Ota kuva, niin teksti tallentuu Google Docsiin.</p>
+
+        <label for="cameraInput" class="btn-kamera">📸 Ota kuva tekstistä</label>
+        <input type="file" accept="image/*" capture="environment" id="cameraInput">
+
+        <div id="status">Odotetaan kuvaa...</div>
+        <div id="result">Skannattu teksti ilmestyy tähän.</div>
+    </div>
+
+    <script>
+        // LIITÄ TÄHÄN VAIHEESSA 1 SAAMASI GOOGLE APPS SCRIPT URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbynrmkuZuEuXzXIU6Q3APf9zYweDFsT0XujxxE-gl-2GPMS6O1q5bHHrCMjqkBKZA2GBg/exec';
+
+        document.getElementById('cameraInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('status');
+            const resultEl = document.getElementById('result');
+
+            statusEl.innerText = 'Tunnistetaan tekstiä kuvasta... (tässä menee hetki)';
+            statusEl.style.color = '#fbbc05';
+
+            try {
+                // 1. Muutetaan kuva tekstiksi (suomi ja englanti ladattuna paremman tarkkuuden vuoksi)
+                const { data: { text } } = await Tesseract.recognize(file, 'fin+eng');
+
+                if (!text.trim()) {
+                    statusEl.innerText = 'Kuvasta ei löytynyt tekstiä.';
+                    statusEl.style.color = 'red';
+                    return;
+                }
+
+                resultEl.innerText = text;
+                statusEl.innerText = 'Teksti luettu! Tallennetaan Driveen...';
+
+                // 2. Lähetetään teksti Google Apps Scriptiin
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Pakollinen, jotta selaimesi turva-asetukset eivät estä lähetystä
+                    body: text
+                });
+
+                statusEl.innerText = '✅ Teksti tallennettu onnistuneesti Docs-tiedostoon!';
+                statusEl.style.color = 'green';
+                
+                // Tyhjennetään input, jotta uuden kuvan ottaminen onnistuu heti
+                document.getElementById('cameraInput').value = '';
+
+            } catch (error) {
+                console.error(error);
+                statusEl.innerText = '❌ Tapahtui virhe: ' + error.message;
+                statusEl.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+</html>
