@@ -42,331 +42,119 @@
             max-width: 480px;
             margin: 0 auto;
             padding: 16px;
-            padding-bottom: 100px;
+            padding-bottom: 120px;
         }
 
-        /* Header */
-        .header {
-            text-align: center;
-            padding: 24px 0 20px;
-        }
+        .header { text-align: center; padding: 24px 0 20px; }
         .header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
             background: linear-gradient(135deg, #6c9fff, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .header p {
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-top: 4px;
-        }
+        .header p { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
 
-        /* Steps indicator */
-        .steps {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 24px;
-        }
-        .step-dot {
-            width: 32px;
-            height: 4px;
-            border-radius: 2px;
-            background: var(--border);
-            transition: background 0.4s, box-shadow 0.4s;
-        }
-        .step-dot.active {
-            background: var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
-        }
-        .step-dot.done {
-            background: var(--success);
-        }
+        .steps { display: flex; justify-content: center; gap: 6px; margin-bottom: 24px; }
+        .step-dot { width: 32px; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.4s, box-shadow 0.4s; }
+        .step-dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+        .step-dot.done { background: var(--success); }
 
-        /* Camera button */
         .camera-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 18px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 18px;
             background: linear-gradient(135deg, #4a6cf7, #6c5ce7);
-            border: none;
-            border-radius: var(--radius);
-            color: white;
-            font-family: inherit;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-            box-shadow: 0 4px 20px rgba(74, 108, 247, 0.35);
+            border: none; border-radius: var(--radius); color: white;
+            font-family: inherit; font-size: 17px; font-weight: 600;
+            cursor: pointer; box-shadow: 0 4px 20px rgba(74, 108, 247, 0.35);
+            transition: transform 0.15s;
         }
-        .camera-btn:active {
-            transform: scale(0.97);
-        }
+        .camera-btn:active { transform: scale(0.97); }
         .camera-btn svg { width: 22px; height: 22px; }
         #cameraInput { display: none; }
 
-        /* Image preview / Cropper */
-        .crop-area {
-            display: none;
-            margin-top: 16px;
-            border-radius: var(--radius);
-            overflow: hidden;
-            border: 1px solid var(--border);
-            background: #000;
-            position: relative;
-        }
+        .crop-area { display: none; margin-top: 16px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: #000; }
         .crop-area.visible { display: block; }
         #imageToCrop { max-width: 100%; display: block; }
 
-        /* Preprocessing toggle */
-        .preprocess-bar {
-            display: none;
-            margin-top: 12px;
-            padding: 10px 14px;
-            background: var(--surface);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
+        .mode-bar { display: none; margin-top: 12px; gap: 8px; }
+        .mode-bar.visible { display: flex; }
+        .mode-chip {
+            flex: 1; padding: 10px 8px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); color: var(--text-dim); font-family: inherit; font-size: 13px;
+            font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: center;
         }
-        .preprocess-bar.visible { display: flex; align-items: center; justify-content: space-between; }
-        .preprocess-bar label {
-            font-size: 13px;
-            color: var(--text-dim);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .toggle {
-            appearance: none;
-            width: 40px;
-            height: 22px;
-            background: var(--border);
-            border-radius: 11px;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .toggle:checked { background: var(--accent); }
-        .toggle::after {
-            content: '';
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.2s;
-        }
-        .toggle:checked::after { transform: translateX(18px); }
+        .mode-chip.selected { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+        .mode-chip small { display: block; font-size: 10px; margin-top: 2px; opacity: 0.7; }
 
-        /* Language selector */
-        .lang-bar {
-            display: none;
-            margin-top: 8px;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .lang-bar { display: none; margin-top: 8px; gap: 6px; flex-wrap: wrap; }
         .lang-bar.visible { display: flex; }
         .lang-chip {
-            padding: 6px 14px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            color: var(--text-dim);
-            font-family: inherit;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 6px 14px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; color: var(--text-dim); font-family: inherit; font-size: 12px;
+            cursor: pointer; transition: all 0.2s;
         }
-        .lang-chip.selected {
-            background: var(--accent-glow);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
+        .lang-chip.selected { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
 
-        /* Scan button */
+        .info-box {
+            margin-top: 12px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); font-size: 12px; color: var(--text-dim); line-height: 1.5; display: none;
+        }
+        .info-box.visible { display: block; }
+
+        /* Fixed scan button */
+        .scan-btn-wrap {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+            background: linear-gradient(to top, var(--bg) 70%, transparent); z-index: 100;
+        }
+        .scan-btn-wrap.visible { display: block; }
         .scan-btn {
-            display: none;
-            width: 100%;
-            padding: 16px;
-            margin-top: 14px;
+            display: block; width: 100%; max-width: 480px; margin: 0 auto; padding: 16px;
             background: linear-gradient(135deg, #22c55e, #16a34a);
-            border: none;
-            border-radius: var(--radius);
-            color: white;
-            font-family: inherit;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
-            transition: transform 0.15s;
+            border: none; border-radius: var(--radius); color: white;
+            font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3); transition: transform 0.15s;
         }
-        .scan-btn.visible { display: block; }
         .scan-btn:active { transform: scale(0.97); }
-        .scan-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Status */
         .status-card {
-            margin-top: 16px;
-            padding: 14px 16px;
-            background: var(--surface);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            font-size: 14px;
-            color: var(--text-dim);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
+            margin-top: 16px; padding: 14px 16px; background: var(--surface);
+            border-radius: var(--radius); border: 1px solid var(--border);
+            font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; transition: all 0.3s;
         }
-        .status-card.scanning {
-            border-color: var(--accent);
-            background: var(--accent-glow);
-            color: var(--accent);
-        }
-        .status-card.success {
-            border-color: var(--success);
-            background: var(--success-glow);
-            color: var(--success);
-        }
-        .status-card.error {
-            border-color: var(--danger);
-            background: rgba(248, 113, 113, 0.1);
-            color: var(--danger);
-        }
+        .status-card.scanning { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); }
+        .status-card.success { border-color: var(--success); background: var(--success-glow); color: var(--success); }
+        .status-card.error { border-color: var(--danger); background: rgba(248,113,113,0.1); color: var(--danger); }
 
-        /* Progress bar */
-        .progress-wrap {
-            display: none;
-            margin-top: 12px;
-            background: var(--surface-2);
-            border-radius: 6px;
-            height: 6px;
-            overflow: hidden;
-        }
+        .progress-wrap { display: none; margin-top: 12px; background: var(--surface-2); border-radius: 6px; height: 6px; overflow: hidden; }
         .progress-wrap.visible { display: block; }
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), #a78bfa);
-            border-radius: 6px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), #a78bfa); border-radius: 6px; width: 0%; transition: width 0.3s ease; }
 
-        /* Result area */
-        .result-card {
-            display: none;
-            margin-top: 16px;
-            background: var(--surface);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
+        .result-card { display: none; margin-top: 16px; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
         .result-card.visible { display: block; }
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .result-header span {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .copy-btn {
-            padding: 5px 12px;
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: inherit;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .copy-btn:active { background: var(--accent-glow); }
-        .result-text {
-            padding: 14px 16px;
-            font-size: 14px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
-            max-height: 300px;
-            overflow-y: auto;
-            color: var(--text);
-        }
-        .result-text[contenteditable="true"]:focus {
-            outline: none;
-            background: var(--surface-2);
-        }
+        .result-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        .result-header span { font-size: 13px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        .copy-btn { padding: 5px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 12px; cursor: pointer; }
+        .result-text { padding: 14px 16px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto; color: var(--text); }
+        .result-text[contenteditable="true"]:focus { outline: none; background: var(--surface-2); }
 
-        /* Action buttons after result */
-        .action-bar {
-            display: none;
-            gap: 8px;
-            margin-top: 12px;
-        }
+        .action-bar { display: none; gap: 8px; margin-top: 12px; }
         .action-bar.visible { display: flex; }
         .action-btn {
-            flex: 1;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--surface);
-            color: var(--text);
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
+            flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius);
+            background: var(--surface); color: var(--text); font-family: inherit; font-size: 14px;
+            font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s;
         }
-        .action-btn.primary {
-            background: linear-gradient(135deg, #4a6cf7, #6c5ce7);
-            border-color: transparent;
-            box-shadow: 0 2px 12px rgba(74, 108, 247, 0.25);
-        }
+        .action-btn.primary { background: linear-gradient(135deg, #4a6cf7, #6c5ce7); border-color: transparent; box-shadow: 0 2px 12px rgba(74,108,247,0.25); }
         .action-btn:active { transform: scale(0.97); }
 
-        /* Retry button */
-        .retry-area {
-            display: none;
-            margin-top: 12px;
-        }
+        .retry-area { display: none; margin-top: 12px; }
         .retry-area.visible { display: block; }
 
-        /* Spinner */
         @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid transparent;
-            border-top-color: currentColor;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            flex-shrink: 0;
-        }
+        .spinner { width: 18px; height: 18px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
 
-        /* Canvas hidden */
         #hiddenCanvas { display: none; }
-
-        /* Custom cropper styling */
-        .cropper-view-box,
-        .cropper-face { border-radius: 0; }
         .cropper-line { background: var(--accent); }
         .cropper-point { background: var(--accent); width: 12px !important; height: 12px !important; border-radius: 50%; }
         .cropper-modal { background: rgba(0,0,0,0.6); }
@@ -386,27 +174,19 @@
         <div class="step-dot" id="step3"></div>
     </div>
 
-    <!-- Step 1: Camera -->
-    <label for="cameraInput" class="camera-btn" id="cameraLabel">
+    <label for="cameraInput" class="camera-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         Ota kuva tai valitse tiedosto
     </label>
     <input type="file" accept="image/*" capture="environment" id="cameraInput">
 
-    <!-- Step 2: Crop -->
     <div class="crop-area" id="cropArea">
         <img id="imageToCrop" src="" alt="Rajaa kuva">
     </div>
 
-    <div class="preprocess-bar" id="preprocessBar">
-        <label>
-            🔧 Kuvanparannus
-            <input type="checkbox" class="toggle" id="enhanceToggle" checked>
-        </label>
-        <label>
-            📐 Terävöitys
-            <input type="checkbox" class="toggle" id="sharpenToggle">
-        </label>
+    <div class="mode-bar" id="modeBar">
+        <button class="mode-chip selected" data-mode="cloud">☁️ Cloud Vision<small>Myös käsinkirjoitus</small></button>
+        <button class="mode-chip" data-mode="local">📱 Paikallinen<small>Tesseract (offline)</small></button>
     </div>
 
     <div class="lang-bar" id="langBar">
@@ -416,19 +196,17 @@
         <button class="lang-chip" data-lang="swe+fin">🇸🇪 Ruotsi + FI</button>
     </div>
 
-    <button class="scan-btn" id="scanBtn">🔍 Skannaa rajattu alue</button>
+    <div class="info-box" id="cloudInfo">
+        ☁️ <strong>Cloud Vision</strong> tunnistaa painetun ja käsinkirjoitetun tekstin.<br>
+        Tarvitsee päivitetyn Apps Scriptin (ohjeet alla).
+    </div>
 
-    <!-- Progress -->
+    <div class="status-card" id="statusCard">Ota kuva tai valitse kuvatiedosto</div>
+
     <div class="progress-wrap" id="progressWrap">
         <div class="progress-bar" id="progressBar"></div>
     </div>
 
-    <!-- Status -->
-    <div class="status-card" id="statusCard">
-        Ota kuva tai valitse kuvatiedosto yllä olevasta napista
-    </div>
-
-    <!-- Result -->
     <div class="result-card" id="resultCard">
         <div class="result-header">
             <span>Tunnistettu teksti</span>
@@ -437,13 +215,11 @@
         <div class="result-text" id="resultText" contenteditable="true"></div>
     </div>
 
-    <!-- Actions after result -->
     <div class="action-bar" id="actionBar">
         <button class="action-btn" id="retakeBtn">📸 Uusi kuva</button>
         <button class="action-btn primary" id="saveDocsBtn">📝 Tallenna Docsiin</button>
     </div>
 
-    <!-- Retry crop (if scan was bad) -->
     <div class="retry-area" id="retryArea">
         <button class="action-btn" style="width:100%" id="retryCropBtn">↩️ Rajaa uudelleen</button>
     </div>
@@ -451,78 +227,73 @@
     <canvas id="hiddenCanvas"></canvas>
 </div>
 
+<!-- Fixed bottom scan button -->
+<div class="scan-btn-wrap" id="scanBtnWrap">
+    <button class="scan-btn" id="scanBtn">🔍 Skannaa rajattu alue</button>
+</div>
+
 <script>
     // =====================================================
-    // ASETUKSET – Vaihda oma Google Apps Script URL tähän
+    // ASETUKSET – Vaihda oma Apps Script URL
     // =====================================================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBtsR0xIR4gCQ795V1GBrURnciRXlOzps487q6Szu2SFwPAD-54IOO7YIdYEwa_7SHMA/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxVAyMRftnPEqGT_7Z5bmqv5S4OuxZXveexkeLJ03Y2TDkqfmU1dxKmnBd3WfjnhwPnaw/exec';
 
-    // =====================================================
-    // DOM-viitteet
     // =====================================================
     const $ = id => document.getElementById(id);
-    const cameraInput = $('cameraInput');
-    const imageToCrop = $('imageToCrop');
-    const cropArea = $('cropArea');
-    const preprocessBar = $('preprocessBar');
-    const langBar = $('langBar');
-    const scanBtn = $('scanBtn');
-    const statusCard = $('statusCard');
-    const progressWrap = $('progressWrap');
-    const progressBar = $('progressBar');
-    const resultCard = $('resultCard');
-    const resultText = $('resultText');
-    const actionBar = $('actionBar');
-    const retryArea = $('retryArea');
-
     let cropperInstance = null;
     let selectedLang = 'fin+eng';
+    let ocrMode = 'cloud';
     let lastImageSrc = null;
 
-    // =====================================================
-    // Apufunktiot
-    // =====================================================
     function setStatus(text, type = '') {
-        statusCard.className = 'status-card ' + type;
-        if (type === 'scanning') {
-            statusCard.innerHTML = `<div class="spinner"></div> ${text}`;
-        } else {
-            const icons = { success: '✅', error: '❌', '': 'ℹ️' };
-            statusCard.innerHTML = `${icons[type] || ''} ${text}`;
-        }
+        const el = $('statusCard');
+        el.className = 'status-card ' + type;
+        el.innerHTML = type === 'scanning'
+            ? `<div class="spinner"></div> ${text}`
+            : `${{success:'✅',error:'❌','':'ℹ️'}[type]||''} ${text}`;
     }
-
     function setStep(n) {
         [1,2,3].forEach(i => {
-            const dot = $('step' + i);
-            dot.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+            $('step'+i).className = 'step-dot'+(i<n?' done':i===n?' active':'');
         });
     }
-
-    function showProgress(pct) {
-        progressWrap.classList.add('visible');
-        progressBar.style.width = pct + '%';
-    }
-    function hideProgress() {
-        progressWrap.classList.remove('visible');
-        progressBar.style.width = '0%';
-    }
+    function showProgress(p) { $('progressWrap').classList.add('visible'); $('progressBar').style.width=p+'%'; }
+    function hideProgress() { $('progressWrap').classList.remove('visible'); $('progressBar').style.width='0%'; }
 
     function resetUI() {
-        cropArea.classList.remove('visible');
-        preprocessBar.classList.remove('visible');
-        langBar.classList.remove('visible');
-        scanBtn.classList.remove('visible');
-        resultCard.classList.remove('visible');
-        actionBar.classList.remove('visible');
-        retryArea.classList.remove('visible');
+        ['cropArea','modeBar','langBar','cloudInfo','scanBtnWrap','resultCard','actionBar','retryArea']
+            .forEach(id => $(id).classList.remove('visible'));
         hideProgress();
         if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
     }
+    function showCropUI() {
+        $('cropArea').classList.add('visible');
+        $('modeBar').classList.add('visible');
+        $('scanBtnWrap').classList.add('visible');
+        updateModeUI();
+    }
+    function hideCropUI() {
+        ['cropArea','modeBar','langBar','cloudInfo','scanBtnWrap'].forEach(id => $(id).classList.remove('visible'));
+    }
+    function updateModeUI() {
+        if (ocrMode === 'cloud') {
+            $('langBar').classList.remove('visible');
+            $('cloudInfo').classList.add('visible');
+        } else {
+            $('langBar').classList.add('visible');
+            $('cloudInfo').classList.remove('visible');
+        }
+    }
 
-    // =====================================================
-    // Kielenvalinta
-    // =====================================================
+    // Mode & Language
+    document.querySelectorAll('.mode-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.mode-chip').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            ocrMode = btn.dataset.mode;
+            updateModeUI();
+        });
+    });
     document.querySelectorAll('.lang-chip').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.lang-chip').forEach(b => b.classList.remove('selected'));
@@ -531,306 +302,213 @@
         });
     });
 
-    // =====================================================
-    // Vaihe 1: Kuvan valinta
-    // =====================================================
-    cameraInput.addEventListener('change', function(e) {
+    // Step 1: Camera
+    $('cameraInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
-
         resetUI();
         setStep(2);
         setStatus('Ladataan kuvaa…', 'scanning');
 
         const reader = new FileReader();
-        reader.onload = function(event) {
-            lastImageSrc = event.target.result;
-
-            imageToCrop.onload = function() {
-                cropArea.classList.add('visible');
-                preprocessBar.classList.add('visible');
-                langBar.classList.add('visible');
-                scanBtn.classList.add('visible');
-
+        reader.onload = function(ev) {
+            lastImageSrc = ev.target.result;
+            $('imageToCrop').onload = function() {
+                showCropUI();
                 if (cropperInstance) cropperInstance.destroy();
-
-                cropperInstance = new Cropper(imageToCrop, {
-                    viewMode: 1,
-                    autoCropArea: 0.85,
-                    movable: true,
-                    zoomable: true,
-                    rotatable: true,
-                    scalable: false,
-                    responsive: true,
-                    restore: true,
-                    guides: true,
-                    highlight: true,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
-                    toggleDragModeOnDblclick: false,
+                cropperInstance = new Cropper($('imageToCrop'), {
+                    viewMode: 1, autoCropArea: 0.85, movable: true,
+                    zoomable: true, rotatable: true, scalable: false,
+                    responsive: true, guides: true, highlight: true,
                 });
-
-                setStatus('Rajaa kuva tekstin kohdalle ja paina Skannaa', '');
+                setStatus('Rajaa teksti ja paina vihreää nappia alhaalla ⬇️', '');
             };
-            imageToCrop.src = lastImageSrc;
+            $('imageToCrop').src = lastImageSrc;
         };
         reader.readAsDataURL(file);
     });
 
-    // =====================================================
-    // Kuvanparannus — adaptiivinen, ei binäärinen
-    // =====================================================
-    function enhanceImage(canvas) {
-        const ctx = canvas.getContext('2d');
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const d = imgData.data;
-
-        const enhance = $('enhanceToggle').checked;
-        const sharpen = $('sharpenToggle').checked;
-
-        if (enhance) {
-            // Harmaasävy + kontrasti (CLAHE-tyylinen yksinkertaistettu)
-            // Lasketaan ensin histogrammi
-            let min = 255, max = 0;
-            for (let i = 0; i < d.length; i += 4) {
-                let gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-                if (gray < min) min = gray;
-                if (gray > max) max = gray;
-            }
-            const range = max - min || 1;
-
-            for (let i = 0; i < d.length; i += 4) {
-                let gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-                // Venytä kontrasti koko alueelle
-                let stretched = ((gray - min) / range) * 255;
-                // Lievä S-käyrä kontrastinparannus
-                stretched = 255 / (1 + Math.exp(-0.03 * (stretched - 128)));
-                d[i] = d[i+1] = d[i+2] = Math.round(stretched);
-            }
-        }
-
-        if (sharpen) {
-            // Yksinkertainen unsharp mask
-            const w = canvas.width;
-            const h = canvas.height;
-            const copy = new Uint8ClampedArray(d);
-            const amount = 0.6;
-
-            for (let y = 1; y < h - 1; y++) {
-                for (let x = 1; x < w - 1; x++) {
-                    const idx = (y * w + x) * 4;
-                    for (let c = 0; c < 3; c++) {
-                        const neighbors =
-                            copy[((y-1)*w+x)*4+c] +
-                            copy[((y+1)*w+x)*4+c] +
-                            copy[(y*w+x-1)*4+c] +
-                            copy[(y*w+x+1)*4+c];
-                        const blur = neighbors / 4;
-                        d[idx+c] = Math.min(255, Math.max(0,
-                            copy[idx+c] + amount * (copy[idx+c] - blur)
-                        ));
-                    }
-                }
-            }
-        }
-
-        ctx.putImageData(imgData, 0, 0);
-    }
-
-    // =====================================================
-    // Vaihe 2: Skannaus
-    // =====================================================
-    scanBtn.addEventListener('click', async function() {
+    // Step 2: Scan
+    $('scanBtn').addEventListener('click', async function() {
         if (!cropperInstance) return;
-        scanBtn.disabled = true;
+        this.disabled = true;
         setStep(3);
-        setStatus('Leikataan ja käsitellään kuvaa…', 'scanning');
+        setStatus('Leikataan kuvaa…', 'scanning');
         showProgress(10);
 
-        // Rajataan — EI rajoiteta maxWidth:iä liian pieneksi
         const croppedCanvas = cropperInstance.getCroppedCanvas({
-            maxWidth: 2400,
-            maxHeight: 2400,
-            imageSmoothingEnabled: true,
-            imageSmoothingQuality: 'high'
+            maxWidth: 2400, maxHeight: 2400,
+            imageSmoothingEnabled: true, imageSmoothingQuality: 'high'
         });
+        hideCropUI();
 
-        const finalCanvas = $('hiddenCanvas');
-        const ctx = finalCanvas.getContext('2d');
-
-        // Skaalaa ylöspäin jos liian pieni (Tesseract tykkää isommasta)
-        const minDim = 1200;
-        let targetW = croppedCanvas.width;
-        let targetH = croppedCanvas.height;
-
-        if (Math.max(targetW, targetH) < minDim) {
-            const scale = minDim / Math.max(targetW, targetH);
-            targetW = Math.round(targetW * scale);
-            targetH = Math.round(targetH * scale);
+        let text = null;
+        if (ocrMode === 'cloud') {
+            const base64 = croppedCanvas.toDataURL('image/jpeg', 0.92);
+            text = await scanCloud(base64);
+        } else {
+            text = await scanLocal(croppedCanvas);
         }
 
-        finalCanvas.width = targetW;
-        finalCanvas.height = targetH;
-        ctx.drawImage(croppedCanvas, 0, 0, targetW, targetH);
+        this.disabled = false;
+        if (text === null) return;
 
-        // Kuvanparannus
-        enhanceImage(finalCanvas);
-        showProgress(25);
-
-        const processedImage = finalCanvas.toDataURL('image/png');
-        setStatus('Luetaan tekstiä – tämä kestää hetken…', 'scanning');
-
-        try {
-            const result = await Tesseract.recognize(processedImage, selectedLang, {
-                logger: m => {
-                    if (m.status === 'recognizing text') {
-                        showProgress(25 + Math.round(m.progress * 65));
-                    }
-                }
-            });
-
-            const text = result.data.text.trim();
-            showProgress(100);
-
-            if (!text) {
-                setStatus('Tekstiä ei löytynyt. Kokeile rajata tarkemmin tai vaihda kieltä.', 'error');
-                scanBtn.disabled = false;
-                retryArea.classList.add('visible');
-                hideProgress();
-                return;
-            }
-
-            // Näytetään tulos muokattavana
-            resultText.innerText = text;
-            resultCard.classList.add('visible');
-            actionBar.classList.add('visible');
-            retryArea.classList.add('visible');
-
-            // Piilotetaan cropper
-            cropArea.classList.remove('visible');
-            preprocessBar.classList.remove('visible');
-            langBar.classList.remove('visible');
-            scanBtn.classList.remove('visible');
-
-            setStatus(`Teksti tunnistettu (${text.length} merkkiä). Voit muokata ennen tallennusta.`, 'success');
+        if (!text.trim()) {
+            setStatus('Tekstiä ei löytynyt. Kokeile rajata tarkemmin.', 'error');
+            $('retryArea').classList.add('visible');
             hideProgress();
-
-        } catch (err) {
-            setStatus('Virhe: ' + err.message, 'error');
-            hideProgress();
-            retryArea.classList.add('visible');
-        }
-        scanBtn.disabled = false;
-    });
-
-    // =====================================================
-    // Vaihe 3: Tallennus Google Docsiin
-    // =====================================================
-    $('saveDocsBtn').addEventListener('click', async function() {
-        const text = resultText.innerText.trim();
-        if (!text) {
-            setStatus('Ei tekstiä tallennettavaksi.', 'error');
             return;
         }
 
-        setStatus('Tallennetaan Google Docsiin…', 'scanning');
-        this.disabled = true;
+        $('resultText').innerText = text;
+        $('resultCard').classList.add('visible');
+        $('actionBar').classList.add('visible');
+        $('retryArea').classList.add('visible');
+        setStatus(`Tunnistettu ${text.length} merkkiä. Voit muokata ennen tallennusta.`, 'success');
+        hideProgress();
+    });
 
+    // Cloud Vision via Apps Script
+    async function scanCloud(imageBase64) {
+        setStatus('Lähetetään Cloud Visionille…', 'scanning');
+        showProgress(30);
         try {
-            const formData = new URLSearchParams();
-            formData.append('text', text);
+            const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+            const body = new URLSearchParams();
+            body.append('action', 'ocr');
+            body.append('image', base64Data);
 
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15000);
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 30000);
 
-            const response = await fetch(WEB_APP_URL, {
+            showProgress(50);
+            setStatus('Cloud Vision lukee tekstiä…', 'scanning');
+
+            const res = await fetch(WEB_APP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData,
-                signal: controller.signal
+                body, signal: ctrl.signal
+            });
+            clearTimeout(timer);
+            showProgress(90);
+
+            const result = await res.text();
+            if (result.startsWith('VIRHE:')) {
+                setStatus(result, 'error');
+                $('retryArea').classList.add('visible');
+                hideProgress();
+                return null;
+            }
+            showProgress(100);
+            return result;
+        } catch (err) {
+            setStatus(err.name === 'AbortError'
+                ? 'Aikakatkaisu – kokeile pienempää rajausta.'
+                : 'Yhteysvirhe: ' + err.message, 'error');
+            $('retryArea').classList.add('visible');
+            hideProgress();
+            return null;
+        }
+    }
+
+    // Local Tesseract
+    async function scanLocal(croppedCanvas) {
+        setStatus('Käsitellään kuvaa…', 'scanning');
+        const c = $('hiddenCanvas'), ctx = c.getContext('2d');
+        const minDim = 1200;
+        let w = croppedCanvas.width, h = croppedCanvas.height;
+        if (Math.max(w,h) < minDim) {
+            const s = minDim / Math.max(w,h); w = Math.round(w*s); h = Math.round(h*s);
+        }
+        c.width = w; c.height = h;
+        ctx.drawImage(croppedCanvas, 0, 0, w, h);
+
+        // Contrast stretch
+        const img = ctx.getImageData(0, 0, w, h), d = img.data;
+        let mn=255, mx=0;
+        for (let i=0; i<d.length; i+=4) { let g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; if(g<mn)mn=g; if(g>mx)mx=g; }
+        const rng = mx-mn||1;
+        for (let i=0; i<d.length; i+=4) {
+            let g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+            let v = 255/(1+Math.exp(-0.03*(((g-mn)/rng)*255-128)));
+            d[i]=d[i+1]=d[i+2]=Math.round(v);
+        }
+        ctx.putImageData(img, 0, 0);
+
+        showProgress(25);
+        setStatus('Tesseract lukee tekstiä…', 'scanning');
+        try {
+            const res = await Tesseract.recognize(c.toDataURL('image/png'), selectedLang, {
+                logger: m => { if(m.status==='recognizing text') showProgress(25+Math.round(m.progress*65)); }
+            });
+            showProgress(100);
+            return res.data.text.trim();
+        } catch (err) {
+            setStatus('Tesseract-virhe: '+err.message, 'error');
+            $('retryArea').classList.add('visible');
+            hideProgress();
+            return null;
+        }
+    }
+
+    // Save to Docs
+    $('saveDocsBtn').addEventListener('click', async function() {
+        const text = $('resultText').innerText.trim();
+        if (!text) { setStatus('Ei tekstiä.', 'error'); return; }
+        setStatus('Tallennetaan…', 'scanning');
+        this.disabled = true;
+        try {
+            const body = new URLSearchParams();
+            body.append('action', 'save');
+            body.append('text', text);
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 15000);
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                body, signal: ctrl.signal
             }).catch(() => null);
-
-            clearTimeout(timeout);
-
-            if (response) {
-                const serverText = await response.text();
-                if (serverText.includes('VIRHE:')) {
-                    setStatus('Tallennus epäonnistui: ' + serverText, 'error');
-                } else {
-                    setStatus('Teksti tallennettu Google Docsiin!', 'success');
-                }
+            clearTimeout(timer);
+            if (res) {
+                const t = await res.text();
+                setStatus(t.includes('VIRHE:') ? 'Virhe: '+t : 'Tallennettu Google Docsiin!', t.includes('VIRHE:') ? 'error' : 'success');
             } else {
-                // CORS / opaque → oletetaan onnistunut
-                setStatus('Tiedot lähetetty! Tarkista Google Docs.', 'success');
+                setStatus('Lähetetty! Tarkista Google Docs.', 'success');
             }
         } catch (err) {
-            if (err.name === 'AbortError') {
-                setStatus('Aikakatkaisu – tarkista Google Docs manuaalisesti.', 'error');
-            } else {
-                setStatus('Lähetetty – tarkista Docs-tiedostosi.', 'success');
-            }
+            setStatus(err.name==='AbortError' ? 'Aikakatkaisu.' : 'Tarkista Docs.', err.name==='AbortError' ? 'error' : 'success');
         }
         this.disabled = false;
     });
 
-    // =====================================================
-    // Kopioi leikepöydälle
-    // =====================================================
+    // Copy
     $('copyBtn').addEventListener('click', async () => {
-        const text = resultText.innerText;
-        try {
-            await navigator.clipboard.writeText(text);
-            $('copyBtn').textContent = '✅ Kopioitu!';
-            setTimeout(() => $('copyBtn').textContent = '📋 Kopioi', 2000);
-        } catch {
-            // Fallback
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            $('copyBtn').textContent = '✅ Kopioitu!';
-            setTimeout(() => $('copyBtn').textContent = '📋 Kopioi', 2000);
+        const t = $('resultText').innerText;
+        try { await navigator.clipboard.writeText(t); } catch {
+            const ta=document.createElement('textarea'); ta.value=t;
+            document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
         }
+        $('copyBtn').textContent='✅ Kopioitu!';
+        setTimeout(()=>$('copyBtn').textContent='📋 Kopioi',2000);
     });
 
-    // =====================================================
-    // Uudelleenrajaus
-    // =====================================================
+    // Retry / Retake
     $('retryCropBtn').addEventListener('click', () => {
         if (!lastImageSrc) return;
-        resultCard.classList.remove('visible');
-        actionBar.classList.remove('visible');
-        retryArea.classList.remove('visible');
-
-        cropArea.classList.add('visible');
-        preprocessBar.classList.add('visible');
-        langBar.classList.add('visible');
-        scanBtn.classList.add('visible');
+        ['resultCard','actionBar','retryArea'].forEach(id=>$(id).classList.remove('visible'));
         setStep(2);
-
         if (cropperInstance) cropperInstance.destroy();
-        imageToCrop.onload = function() {
-            cropperInstance = new Cropper(imageToCrop, {
-                viewMode: 1,
-                autoCropArea: 0.85,
-                movable: true,
-                zoomable: true,
-                rotatable: true,
+        $('imageToCrop').onload = function() {
+            showCropUI();
+            cropperInstance = new Cropper($('imageToCrop'), {
+                viewMode:1, autoCropArea:0.85, movable:true, zoomable:true, rotatable:true,
             });
         };
-        imageToCrop.src = lastImageSrc;
-        setStatus('Rajaa uudelleen ja paina Skannaa', '');
+        $('imageToCrop').src = lastImageSrc;
+        setStatus('Rajaa uudelleen ja paina Skannaa ⬇️', '');
     });
 
-    // =====================================================
-    // Uusi kuva
-    // =====================================================
     $('retakeBtn').addEventListener('click', () => {
-        resetUI();
-        setStep(1);
-        cameraInput.value = '';
+        resetUI(); setStep(1); $('cameraInput').value = '';
         setStatus('Ota uusi kuva tai valitse tiedosto', '');
     });
 </script>
